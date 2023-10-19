@@ -23,7 +23,9 @@ def create_graph(stops:list, trips:list, transfers:list) -> dict:
         stop_id = stop[0].rstrip('SN')
         graph[stop_id] = {
             'name': stop[1],
-            'edges': set()
+            'edges': dict(),
+            'latitude': float(stop[2]),
+            'longitude': float(stop[3])
         }
 
     # Populate connections
@@ -36,14 +38,17 @@ def create_graph(stops:list, trips:list, transfers:list) -> dict:
         
         last_id = last[1].rstrip('SN')
         cur_id = cur[1].rstrip('SN')
+
         h1, m1, s1 = map(int, last[3].split(':'))
         h2, m2, s2 = map(int, cur[2].split(':'))
         diff_time = abs((h1*3600 + m1*60 + s1) - (h2*3600 + m2*60 + s2))
-        graph[last_id]['edges'].add((cur_id, diff_time))
+
+        cur_time = graph[last_id]['edges'].get(cur_id, 1_000_000)
+        graph[last_id]['edges'][cur_id] = min(cur_time, diff_time)
 
     for last_id, cur_id in transfers:
         if last_id != cur_id:
-            graph[last_id]['edges'].add((cur_id, 0))
+            graph[last_id]['edges'][cur_id] = 0
 
     return graph
 
